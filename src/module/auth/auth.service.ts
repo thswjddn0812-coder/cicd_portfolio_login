@@ -34,4 +34,7 @@ export class AuthService {
     const refresh_token = await this.tokenService.generateRefreshToken(user.id);
     return { access_token, refresh_token };
   }
+  async isTokenExpired(token:string){
+    return this.tokenService.validateAccessToken(token);
+  }
 }

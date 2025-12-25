@@ -53,7 +53,14 @@ export class tokenService {
     return refreshToken;
   }
   async validateAccessToken(token: string) {
-    return await this.jwtService.verifyAsync(token);
+    try{
+          return await this.jwtService.verifyAsync(token);
+    }catch(e){
+      if(e.name==="TokenExpiredError"){
+        throw new UnauthorizedException('액세스 토큰이 만료되었습니다.');
+      }
+      throw new UnauthorizedException('액세스 토큰이 유효하지 않습니다.');
+    }
   }
 
   async validateRefreshToken(token: string) {

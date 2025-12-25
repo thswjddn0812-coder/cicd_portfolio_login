@@ -35,4 +35,9 @@ export class AuthController {
     // 3. 새로운 엑세스 토큰만 바디로 던져주기
     return { accessToken };
   }
+  @Post('validToken')
+  async validToken(@Body() body:{token:string}){
+    return this.authService.isTokenExpired(body.token);
+  }
+
 }
