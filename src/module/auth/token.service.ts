@@ -32,7 +32,7 @@ export class tokenService {
         expiresIn: '10m',
       },
     );
-    const hasedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    const hasedRefreshToken = await bcrypt.hash(refreshToken, 3);
     const target = await this.refreshTokenRepository.findOne({
       where: { userId },
     });
@@ -40,7 +40,7 @@ export class tokenService {
       await this.refreshTokenRepository.create({
         userId,
         hashedToken: hasedRefreshToken,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 3 * 60 * 1000),
       });
     }
     await this.refreshTokenRepository.delete({ userId });
@@ -53,10 +53,10 @@ export class tokenService {
     return refreshToken;
   }
   async validateAccessToken(token: string) {
-    try{
-          return await this.jwtService.verifyAsync(token);
-    }catch(e){
-      if(e.name==="TokenExpiredError"){
+    try {
+      return await this.jwtService.verifyAsync(token);
+    } catch (e) {
+      if (e.name === 'TokenExpiredError') {
         throw new UnauthorizedException('액세스 토큰이 만료되었습니다.');
       }
       throw new UnauthorizedException('액세스 토큰이 유효하지 않습니다.');

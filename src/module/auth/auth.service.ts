@@ -34,7 +34,11 @@ export class AuthService {
     const refresh_token = await this.tokenService.generateRefreshToken(user.id);
     return { access_token, refresh_token };
   }
-  async isTokenExpired(token:string){
+  async isTokenExpired(token: string) {
     return this.tokenService.validateAccessToken(token);
+  }
+  async profile(userId: number) {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    return user;
   }
 }
