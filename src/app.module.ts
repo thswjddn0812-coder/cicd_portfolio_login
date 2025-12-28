@@ -22,7 +22,7 @@ import { RefreshToken } from './module/auth/entities/refreshToken.entity';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_DATABASE,
       entities: [Users, EmailVerifications, RefreshToken],
-      synchronize: true,
+      synchronize: false,
       ssl: {
         rejectUnauthorized: false,
       },

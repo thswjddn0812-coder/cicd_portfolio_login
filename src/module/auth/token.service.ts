@@ -29,7 +29,7 @@ export class tokenService {
     const refreshToken = await this.jwtService.signAsync(
       { userId },
       {
-        expiresIn: '10m',
+        expiresIn: '5m',
       },
     );
     const hasedRefreshToken = await bcrypt.hash(refreshToken, 3);
@@ -40,14 +40,14 @@ export class tokenService {
       await this.refreshTokenRepository.create({
         userId,
         hashedToken: hasedRefreshToken,
-        expiresAt: new Date(Date.now() + 3 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       });
     }
     await this.refreshTokenRepository.delete({ userId });
     const newToken = await this.refreshTokenRepository.create({
       userId,
       hashedToken: hasedRefreshToken,
-      expiresAt: new Date(Date.now() + 3 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
     await this.refreshTokenRepository.save(newToken);
     return refreshToken;
@@ -66,13 +66,22 @@ export class tokenService {
   async validateRefreshToken(token: string) {
     try {
       const payload = await this.jwtService.verifyAsync(token);
+
       const dbToken = await this.refreshTokenRepository.findOne({
-        where: { userId: payload.sub },
+        where: { userId: payload.userId },
       });
-      if (!dbToken || !(await bcrypt.compare(token, dbToken.hashedToken))) {
-        throw new UnauthorizedException('유효하지 않은 토큰입니다.');
+
+      if (!dbToken) {
+         throw new UnauthorizedException('DB에 토큰이 없음');
       }
-      return await this.generateAccessToken(payload.sub);
+
+      const isMatch = await bcrypt.compare(token, dbToken.hashedToken);
+
+      if (!isMatch) {
+        throw new UnauthorizedException('토큰 불일치');
+      }
+
+      return await this.generateAccessToken(payload.userId);
     } catch (e) {
       throw new UnauthorizedException('리프레쉬 토큰이 만료되었거나 유효하지 않습니다.');
     }

@@ -17,7 +17,7 @@ export class AuthController {
     const { access_token, refresh_token } = await this.authService.signIn(LoginDto);
     res.cookie('RefreshToken', refresh_token, {
       httpOnly: true,
-      secure: true,
+      secure: true, // 🚩 Localhost 환경에서는 false로 설정해야 쿠키가 저장됨! (배포 시엔 true로 변경 필요)
       sameSite: 'strict',
       maxAge: 10 * 60 * 1000,
     });
@@ -26,15 +26,16 @@ export class AuthController {
   // AuthsController 안에서
   @Post('refresh')
   async refresh(@Req() req: Request) {
-    const refreshToken = req.cookies['RefreshToken']; // 이름 주의! 로그인 때 설정한 이름이랑 같아야 해.
+    const refreshToken = req.cookies['RefreshToken']; 
+
     if (!refreshToken) {
       throw new UnauthorizedException('리프레시 토큰이 없습니다.');
     }
     // 2. 서비스 호출해서 새 Access Token 받기
-    const accessToken = await this.tokenService.validateRefreshToken(refreshToken);
+    const access_token = await this.tokenService.validateRefreshToken(refreshToken);
 
     // 3. 새로운 엑세스 토큰만 바디로 던져주기
-    return { accessToken };
+    return { access_token };
   }
   @Post('validToken')
   async validToken(@Body() body: { token: string }) {
@@ -76,4 +77,15 @@ export class AuthController {
       profileImageUrl: user?.profileImageUrl,
     };
   }
+  @Post('logout')
+async logout(@Res({ passthrough: true }) res: Response) {
+  // 쿠키 이름을 로그인 때 설정한 'RefreshToken'과 똑같이 적고, 만료 시간을 0으로 설정!
+  res.cookie('RefreshToken', '', {
+    httpOnly: true,
+    secure: false, // 🚩 로그인과 동일한 설정이어야 삭제됨
+    sameSite: 'strict',
+    expires: new Date(0), 
+  });
+  return { message: '로그아웃 성공' };
+}
 }
